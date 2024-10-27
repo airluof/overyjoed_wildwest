@@ -3,12 +3,12 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # Получение токена из переменных окружения
-TOKEN = os.getenv("7647773708:AAHarSrLNkpcnGIAyr2GJykhd1rqNtiY5JU")
+TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 # Приветственное сообщение
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     welcome_message = (
-        "Добро пожаловать в мир Дикого Запада!\n"
+        "🤠 Добро пожаловать в мир Дикого Запада!\n"
         "Здесь вы можете:\n"
         "- Начать приключения\n"
         "- Покупать предметы\n"
@@ -37,13 +37,17 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 # Статистика
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Здесь вы можете добавить логику для отображения статистики игрока
-    stats_message = "Ваша статистика:\n- Уровень: 1\n- Валюта: 100\n- Здоровье: 100"
+    stats_message = "📊 Ваша статистика:\n- Уровень: 1\n- Валюта: 100\n- Здоровье: 100"
     await update.message.reply_text(stats_message)
 
 # Магазин
 async def shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Здесь вы можете добавить логику для отображения товаров в магазине
-    shop_message = "Добро пожаловать в магазин! Вы можете купить:\n- Пистолет - 50 монет\n- Лошадь - 100 монет"
+    shop_message = (
+        "🏪 Добро пожаловать в магазин! Вы можете купить:\n"
+        "- Револьвер - 50 монет\n"
+        "- Лошадь - 100 монет"
+    )
     await update.message.reply_text(shop_message)
 
 if __name__ == '__main__':
