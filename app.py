@@ -55,16 +55,15 @@ async def main():
     print("Бот запущен и ждет сообщений...")
     await app.run_polling()
 
-if __name__ == "__main__":
-    try:
-        # Используем существующий цикл событий, если он уже запущен
-        loop = asyncio.get_running_loop()
-    except RuntimeError:  # Если цикл не запущен, создаём новый
-        loop = None
-
-    if loop and loop.is_running():
+# Проверка на наличие запущенного цикла событий и запуск бота
+try:
+    loop = asyncio.get_running_loop()
+    if loop.is_running():
         print("Используем уже запущенный цикл событий")
         loop.create_task(main())
     else:
         print("Запускаем новый цикл событий")
         asyncio.run(main())
+except RuntimeError:
+    print("Запускаем новый цикл событий")
+    asyncio.run(main())
