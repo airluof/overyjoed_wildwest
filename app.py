@@ -1,5 +1,4 @@
 import random
-import time
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
@@ -15,8 +14,8 @@ messages = []
 def generate_response(user_message):
     """Генерирует остроумный ответ на основе пользовательского сообщения."""
     responses = [
-        f"{user_message.split(',')[0]}, я тоже в тебя верю! Мы сможем это сделать вместе!",
-        f"{user_message.split(':')[0]}? А как же это 'привет' для начала?",
+        f"{user_message.split(':')[0]}, я тоже в тебя верю! Мы сможем это сделать вместе!",
+        f"'{user_message}'? А как же это 'привет' для начала?",
         f"Ого, '{user_message}' - звучит как приглашение на дискуссию!",
         f"Если '{user_message}' - это ваше приветствие, то мне страшно думать о следующем сообщении!",
     ]
@@ -25,8 +24,7 @@ def generate_response(user_message):
 async def send_funny_message(context: ContextTypes.DEFAULT_TYPE):
     """Отправляет случайное остроумное сообщение в чат, основываясь на запомненных сообщениях."""
     chat_id = context.job.context
-    if messages:
-        # Выбираем случайное сообщение из запомненных
+    if chat_id is not None and messages:
         user_message = random.choice(messages)
         response = generate_response(user_message)
         await context.bot.send_message(chat_id=chat_id, text=response)
@@ -44,10 +42,12 @@ async def main():
     # Обработчик текстовых сообщений
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    # Планировщик для отправки остроумных сообщений
-    chat_id = None
     # Получаем chat_id из первого сообщения
-    application.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=chat_id)
+    async def set_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Устанавливает chat_id для JobQueue."""
+        context.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=update.message.chat.id)
+
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, set_chat_id, run_async=True))
 
     # Запуск бота
     await application.run_polling()
