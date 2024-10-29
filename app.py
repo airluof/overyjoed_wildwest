@@ -1,9 +1,10 @@
 import logging
+import random
+import time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import random
 
-# Настройка логирования
+# Включение логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -11,35 +12,35 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Хранение данных о пользователях в группах
-group_data = {}
+# Список случайных троллинг-сообщений
+troll_messages = [
+    "О, вот снова {name}! Как твой уровень нубства?",
+    "Эй, {name}, когда ты собираешься научиться играть?",
+    "Что за бред ты несешь, {name}?",
+    "Серьезно, {name}, ты думаешь, что это хорошая идея?",
+]
+
+# Словарь для хранения имен пользователей
+usernames = {}
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text('Привет! Я бот для развлечений. Пишите мне, и я вас позабавлю!')
+    await update.message.reply_text("Привет! Я бот для троллинга. Пиши мне что-нибудь!")
 
 # Обработка текстовых сообщений
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    chat_id = update.message.chat.id
     user_id = update.message.from_user.id
-    user_name = update.message.from_user.first_name
+    username = update.message.from_user.username or update.message.from_user.first_name
 
-    # Инициализация данных для группы, если ещё не существует
-    if chat_id not in group_data:
-        group_data[chat_id] = {}
+    # Запоминаем имя пользователя
+    usernames[user_id] = username
 
-    # Инициализация данных для пользователя в группе
-    if user_id not in group_data[chat_id]:
-        group_data[chat_id][user_id] = {'name': user_name, 'messages': []}
-
-    # Сохраняем сообщение пользователя
-    group_data[chat_id][user_id]['messages'].append(update.message.text)
-
-    # Если у пользователя уже есть сообщения, троллим его
-    if len(group_data[chat_id][user_id]['messages']) > 1:
-        # Получаем случайное сообщение для троллинга
-        troll_message = random.choice(group_data[chat_id][user_id]['messages'][:-1])
-        await update.message.reply_text(f"Эй, {user_name}, ты когда-то говорил: '{troll_message}'? 😂")
+    # Случайное троллинг-сообщение
+    if random.random() < 0.3:  # 30% вероятность ответа
+        troll_message = random.choice(troll_messages).format(name=username)
+        await update.message.reply_text(troll_message)
+    else:
+        await update.message.reply_text(f"Ты сказал: {update.message.text}")
 
 # Основная функция
 def main() -> None:
@@ -49,8 +50,13 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    # Запуск бота
-    app.run_polling()
+    while True:
+        try:
+            # Запуск бота
+            app.run_polling()
+        except Exception as e:
+            logger.error(f"Ошибка при запуске бота: {e}")
+            time.sleep(5)  # Ожидание перед повторной попыткой
 
 if __name__ == '__main__':
     main()
