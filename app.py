@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, JobQueue
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import random
 
 # Глобальная переменная для хранения сообщений
@@ -34,6 +34,10 @@ async def main() -> None:
 
     await application.run_polling()
 
+# Убираем asyncio.run и просто запускаем main()
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(main())
+
+    # Создаем основной асинхронный цикл
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
