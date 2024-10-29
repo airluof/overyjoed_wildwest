@@ -1,5 +1,2 @@
-numpy<2.0
-python-telegram-bot==20.3
-requests==2.28.1
-transformers==4.31.0
-torch==2.0.1
+python-telegram-bot==20.0  # Убедитесь, что версия актуальна
+requests==2.26.0  # Также проверьте последнюю стабильную версию
