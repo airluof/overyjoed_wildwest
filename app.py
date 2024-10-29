@@ -13,8 +13,19 @@ api = InferenceApi(repo_id="gpt2", token=hf_token)  # Используем мо�
 
 # Функция для генерации ответа
 async def generate_response(user_message):
-    response = api(inputs=user_message)
-    return response[0]['generated_text'] if 'generated_text' in response[0] else "Извините, я не понял."
+    try:
+        response = api(inputs=user_message)
+        logger.info(f"Response from API: {response}")  # Логируем ответ от API
+
+        # Проверяем, что ответ имеет ожидаемую структуру
+        if isinstance(response, list) and len(response) > 0 and 'generated_text' in response[0]:
+            return response[0]['generated_text']
+        else:
+            logger.error(f"Unexpected response structure: {response}")
+            return "Извините, я не понял."
+    except Exception as e:
+        logger.error(f"Error while generating response: {e}")
+        return "Извините, произошла ошибка."
 
 # Обработка текстовых сообщений
 async def troll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
