@@ -10,14 +10,14 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 # Хранение сообщений
 messages = []
 
-# Примеры остроумных ответов
+# Генерация остроумного ответа
 def generate_response(user_message):
     """Генерирует остроумный ответ на основе пользовательского сообщения."""
     responses = [
         f"{user_message.split(':')[0]}, я тоже в тебя верю! Мы сможем это сделать вместе!",
         f"'{user_message}'? А как же это 'привет' для начала?",
-        f"Ого, '{user_message}' - звучит как приглашение на дискуссию!",
         f"Если '{user_message}' - это ваше приветствие, то мне страшно думать о следующем сообщении!",
+        f"Ого, '{user_message}' - звучит как приглашение на дискуссию!",
     ]
     return random.choice(responses)
 
@@ -35,7 +35,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     messages.append(text)  # Запоминаем сообщение
     logging.info(f"Запомнено сообщение: {text}")
 
-    # Устанавливаем chat_id, если он еще не установлен
+    # Запускаем JobQueue, если она еще не была запущена
     if context.job_queue.get_jobs_by_name('funny_message_job') == []:
         context.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=update.message.chat.id, name='funny_message_job')
 
@@ -50,4 +50,6 @@ async def main():
     await application.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Получаем текущий цикл событий
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
