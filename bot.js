@@ -9,13 +9,22 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 async function getTrollingMessage(name) {
     try {
         const response = await axios.post('https://api-inference.huggingface.co/models/gpt2', {
-            inputs: `Скажи что-нибудь смешное про ${name}`,
+            inputs: `Напиши шутку о ${name}`, // Изменил формулировку
         }, {
             headers: {
                 Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}`, // Используем токен из переменной окружения
             },
         });
-        return response.data[0].generated_text || "Не могу придумать что-то смешное!";
+
+        // Логируем ответ от модели
+        console.log('Ответ от модели:', response.data);
+
+        // Проверяем корректность ответа
+        if (response.data && response.data[0] && response.data[0].generated_text) {
+            return response.data[0].generated_text;
+        } else {
+            return "Не могу придумать что-то смешное!";
+        }
     } catch (error) {
         console.error('Ошибка при получении сообщения:', error);
         return "Что-то пошло не так!";
@@ -24,9 +33,14 @@ async function getTrollingMessage(name) {
 
 // Обработка текстовых сообщений
 bot.on('text', async (ctx) => {
-    const name = ctx.from.first_name || 'незнакомец';
-    const trollingMessage = await getTrollingMessage(name);
-    ctx.reply(trollingMessage); // Отправляем троллинговое сообщение в чат
+    try {
+        const name = ctx.from.first_name || 'незнакомец';
+        const trollingMessage = await getTrollingMessage(name);
+        ctx.reply(trollingMessage); // Отправляем троллинговое сообщение в чат
+    } catch (error) {
+        console.error('Ошибка при обработке сообщения:', error);
+        ctx.reply('Произошла ошибка, попробуйте еще раз.');
+    }
 });
 
 // Запуск бота
