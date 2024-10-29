@@ -51,7 +51,8 @@ async def main():
     print("Бот запущен и ждет сообщений...")
     await app.initialize()  # Явно инициализируем приложение
     await app.start()  # Запускаем приложение
-    await app.updater.idle()  # Ожидаем завершения работы приложения
+    await app.updater.start_polling()  # Запускаем polling
+    await app.idle()  # Ожидаем завершения работы приложения
 
 if __name__ == "__main__":
     asyncio.run(main())  # Используем asyncio.run() для запуска основной функции
