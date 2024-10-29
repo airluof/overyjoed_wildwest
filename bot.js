@@ -8,8 +8,8 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // Функция для получения троллингового сообщения от нейросети
 async function getTrollingMessage(name) {
     try {
-        const response = await axios.post('https://api-inference.huggingface.co/models/gpt2', {
-            inputs: `Напиши шутку о ${name}`, // Изменил формулировку
+        const response = await axios.post('https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B', {
+            inputs: `Напиши шутку о ${name}`, // Используем модель GPT-Neo
         }, {
             headers: {
                 Authorization: `Bearer ${process.env.HUGGING_FACE_TOKEN}`, // Используем токен из переменной окружения
