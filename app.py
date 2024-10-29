@@ -1,55 +1,45 @@
-import random
 import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-import asyncio
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from transformers import pipeline
 
 # Настройка логирования
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Хранение сообщений
-messages = []
+# Загрузка модели для генерации ответов
+model_name = "microsoft/DialoGPT-medium"
+generator = pipeline('text-generation', model=model_name)
 
-# Генерация остроумного ответа
-def generate_response(user_message):
-    """Генерирует остроумный ответ на основе пользовательского сообщения."""
-    responses = [
-        f"{user_message.split(':')[0]}, я тоже в тебя верю! Мы сможем это сделать вместе!",
-        f"'{user_message}'? А как же это 'привет' для начала?",
-        f"Если '{user_message}' - это ваше приветствие, то мне страшно думать о следующем сообщении!",
-        f"Ого, '{user_message}' - звучит как приглашение на дискуссию!",
-    ]
-    return random.choice(responses)
+# Команда /start
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('Привет! Я твой тролль-бот. Начинай говорить, и я дам тебе ответ!')
 
-async def send_funny_message(context: ContextTypes.DEFAULT_TYPE):
-    """Отправляет случайное остроумное сообщение в чат, основываясь на запомненных сообщениях."""
-    chat_id = context.job.context
-    if chat_id is not None and messages:
-        user_message = random.choice(messages)
-        response = generate_response(user_message)
-        await context.bot.send_message(chat_id=chat_id, text=response)
+# Обработка текстовых сообщений
+def troll(update: Update, context: CallbackContext) -> None:
+    user_message = update.message.text
+    # Генерация ответа
+    response = generator(user_message, max_length=50, num_return_sequences=1)
+    troll_response = response[0]['generated_text']
+    update.message.reply_text(troll_response)
 
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик текстовых сообщений."""
-    text = update.message.text
-    messages.append(text)  # Запоминаем сообщение
-    logging.info(f"Запомнено сообщение: {text}")
+def main() -> None:
+    # Вставьте ваш токен
+    updater = Updater("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA")
 
-    # Запускаем JobQueue, если она еще не была запущена
-    if context.job_queue.get_jobs_by_name('funny_message_job') == []:
-        context.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=update.message.chat.id, name='funny_message_job')
+    # Получаем диспетчер для регистрации обработчиков
+    dispatcher = updater.dispatcher
 
-async def main():
-    """Запуск бота."""
-    application = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
-
-    # Обработчик текстовых сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    # Регистрация обработчиков команд и сообщений
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, troll))
 
     # Запуск бота
-    await application.run_polling()
+    updater.start_polling()
 
-if __name__ == "__main__":
-    # Получаем текущий цикл событий
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    # Запуск бота до завершения работы
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
