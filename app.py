@@ -52,5 +52,6 @@ async def main():
     await app.run_polling()
 
 if __name__ == "__main__":
-    # Запускаем основную функцию без asyncio.run()
-    asyncio.run(main())
+    # Заменяем asyncio.run() на ожидание main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
