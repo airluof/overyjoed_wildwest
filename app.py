@@ -53,15 +53,12 @@ async def main():
     job_queue.run_repeating(send_random_messages, interval=10, first=0)
 
     print("Бот запущен и ждет сообщений...")
-    await app.run_polling()
+
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await app.updater.idle()  # Ждём завершения приложения
+    await app.shutdown()  # Останавливаем корректно после завершения работы
 
 if __name__ == "__main__":
-    try:
-        # Попытка получить существующий цикл событий
-        loop = asyncio.get_running_loop()
-    except RuntimeError:  
-        # Если цикла нет — запускаем asyncio.run()
-        asyncio.run(main())
-    else:
-        # Если цикл существует, запускаем main в нём
-        loop.create_task(main())
+    asyncio.run(main())
