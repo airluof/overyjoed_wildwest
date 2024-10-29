@@ -53,10 +53,7 @@ async def main():
     job_queue.run_repeating(send_random_messages, interval=10, first=0)
 
     print("Бот запущен и ждет сообщений...")
-
-    await app.start()
-    await app.run_polling()  # Заменяем `idle()` на `run_polling`, так как он будет блокировать выполнение до завершения
-    await app.stop()         # Завершение приложения
+    await app.run_polling()  # Совместимый с версией 20.0 метод, который ожидает сообщений
 
 if __name__ == "__main__":
     asyncio.run(main())
