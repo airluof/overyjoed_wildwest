@@ -53,7 +53,18 @@ async def main():
     job_queue.run_repeating(send_random_messages, interval=10, first=0)
 
     print("Бот запущен и ждет сообщений...")
-    await app.run_polling()  # Совместимый с версией 20.0 метод, который ожидает сообщений
+    await app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        # Используем существующий цикл событий, если он уже запущен
+        loop = asyncio.get_running_loop()
+    except RuntimeError:  # Если цикл не запущен, создаём новый
+        loop = None
+
+    if loop and loop.is_running():
+        print("Используем уже запущенный цикл событий")
+        loop.create_task(main())
+    else:
+        print("Запускаем новый цикл событий")
+        asyncio.run(main())
