@@ -1,15 +1,10 @@
-import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# Получаем токен из переменной окружения
-TOKEN = os.getenv("7647773708:AAE33MAv7RTc8vpcwmVUnu1j2PYxaG1-l8U")
+# Укажите токен напрямую
+TOKEN = "7647773708:AAHarSrLNkpcnGIAyr2GJykhd1rqNtiY5JU"
 
-# Проверяем, что токен установлен
-if not TOKEN:
-    raise ValueError("Токен бота не установлен. Пожалуйста, добавьте его в переменную окружения TELEGRAM_TOKEN.")
-
-# Начальная команда /start
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Добро пожаловать в мир Дикого Запада! 🌄\n"
@@ -17,9 +12,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Используйте /profile, чтобы посмотреть свою статистику, и /buy, чтобы купить предметы."
     )
 
-# Команда для просмотра профиля игрока
+# Команда для профиля
 async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Заглушка профиля для примера
     user_profile = {
         "уровень": 1,
         "золото": 100,
@@ -34,30 +28,18 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Команда для покупки предметов
 async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Пример предметов, которые можно купить
     items = {
         "лошадь": 50,
         "шляпа": 20,
         "револьвер": 100
     }
     item_list = "\n".join([f"{item.capitalize()}: {price} золота" for item, price in items.items()])
-    await update.message.reply_text(
-        f"Вы можете купить:\n{item_list}\n\n"
-        "Используйте команду /buy <предмет> для покупки."
-    )
+    await update.message.reply_text(f"Доступные предметы для покупки:\n{item_list}")
 
-# Настройка и запуск бота
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+# Создание и запуск приложения
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("profile", profile))
+app.add_handler(CommandHandler("buy", buy))
 
-    # Регистрируем обработчики команд
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("profile", profile))
-    app.add_handler(CommandHandler("buy", buy))
-
-    # Запускаем бота
-    print("Бот запущен...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+app.run_polling()
