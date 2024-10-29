@@ -1,48 +1,65 @@
-import random
 import logging
+import random
+import asyncio
 from collections import defaultdict
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Настройка логирования
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
-# Словарь для хранения слов пользователей
-user_words = defaultdict(list)
+# Хранилище фраз пользователей
+user_phrases = defaultdict(list)
 
-# Функция для генерации мемных словосочетаний
+# Функция для генерации мемных фраз
 def generate_meme(user_id):
-    words = user_words[user_id]
-    if len(words) < 2:
+    if user_phrases[user_id]:
+        return random.choice(user_phrases[user_id])
+    else:
         return None
-    return f"{random.choice(words)} {random.choice(words)}"
 
-# Обработчик текстовых сообщений
+# Обработчик сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text
 
-    # Запоминаем слова пользователя
-    words = text.split()
-    user_words[user_id].extend(words)
+    # Сохраняем сообщение пользователя
+    user_phrases[user_id].append(text)
 
-    # Генерируем мемное словосочетание
+    # Генерируем мемную фразу
     meme = generate_meme(user_id)
     if meme:
-        await update.message.reply_text(meme)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=meme)
+
+# Функция для периодической отправки случайных сообщений
+async def send_random_messages(context):
+    while True:
+        await asyncio.sleep(10)  # Задержка в 10 секунд между сообщениями
+        chat_id = context.job.context
+        if user_phrases:
+            user_id = random.choice(list(user_phrases.keys()))
+            meme = generate_meme(user_id)
+            if meme:
+                await context.bot.send_message(chat_id=chat_id, text=meme)
+
+# Команда для старта бота
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Бот запущен! Начни общаться!')
 
 # Основная функция
 async def main():
-    # Создание приложения
     app = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
 
-    # Добавление обработчиков
+    app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Запуск бота
+    # Добавление задачи на отправку случайных сообщений
+    job_queue = app.job_queue
+    job_queue.run_repeating(send_random_messages, interval=10, first=0, context=update.effective_chat.id)
+
     await app.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
