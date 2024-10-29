@@ -35,19 +35,16 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     messages.append(text)  # Запоминаем сообщение
     logging.info(f"Запомнено сообщение: {text}")
 
+    # Устанавливаем chat_id, если он еще не установлен
+    if context.job_queue.get_jobs_by_name('funny_message_job') == []:
+        context.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=update.message.chat.id, name='funny_message_job')
+
 async def main():
     """Запуск бота."""
     application = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
 
     # Обработчик текстовых сообщений
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-
-    # Получаем chat_id из первого сообщения
-    async def set_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Устанавливает chat_id для JobQueue."""
-        context.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=update.message.chat.id)
-
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, set_chat_id, run_async=True))
 
     # Запуск бота
     await application.run_polling()
