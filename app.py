@@ -13,8 +13,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     user_messages.append(update.message.text)
 
 async def send_random_message(context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = context.job.data['chat_id']  # Получаем chat_id из data
     if user_messages:
-        chat_id = context.job.chat_id
         random_message = random.choice(user_messages)
         await context.bot.send_message(chat_id=chat_id, text=random_message)
 
@@ -30,7 +30,7 @@ async def main() -> None:
 
     # Добавляем задачу, чтобы бот отправлял сообщения через определенный интервал
     chat_id = 'YOUR_GROUP_CHAT_ID'  # Укажите ID группы здесь
-    job_queue.run_repeating(send_random_message, interval=10, first=0, context={'chat_id': chat_id})
+    job_queue.run_repeating(send_random_message, interval=10, first=0, data={'chat_id': chat_id})
 
     await application.run_polling()
 
