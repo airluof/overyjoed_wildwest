@@ -1,58 +1,56 @@
-import asyncio
 import random
-from collections import defaultdict
+import time
+import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+import asyncio
 
-# Словарь для хранения слов пользователей
-user_words = defaultdict(list)
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# Список мемных фраз
-meme_phrases = [
-    "Когда ты {word1}, а не {word2}",
-    "Ты такой {word} на самом деле!",
-    "Зачем ты {word}, если можно {word2}?",
-]
+# Хранение сообщений
+messages = []
 
-# Функция для обработки текстовых сообщений
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
+# Примеры остроумных ответов
+def generate_response(user_message):
+    """Генерирует остроумный ответ на основе пользовательского сообщения."""
+    responses = [
+        f"{user_message.split(',')[0]}, я тоже в тебя верю! Мы сможем это сделать вместе!",
+        f"{user_message.split(':')[0]}? А как же это 'привет' для начала?",
+        f"Ого, '{user_message}' - звучит как приглашение на дискуссию!",
+        f"Если '{user_message}' - это ваше приветствие, то мне страшно думать о следующем сообщении!",
+    ]
+    return random.choice(responses)
+
+async def send_funny_message(context: ContextTypes.DEFAULT_TYPE):
+    """Отправляет случайное остроумное сообщение в чат, основываясь на запомненных сообщениях."""
+    chat_id = context.job.context
+    if messages:
+        # Выбираем случайное сообщение из запомненных
+        user_message = random.choice(messages)
+        response = generate_response(user_message)
+        await context.bot.send_message(chat_id=chat_id, text=response)
+
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик текстовых сообщений."""
     text = update.message.text
+    messages.append(text)  # Запоминаем сообщение
+    logging.info(f"Запомнено сообщение: {text}")
 
-    # Запоминаем слова пользователя
-    words = text.split()
-    user_words[user_id].extend(words)
-    print(f"Запомненные слова для пользователя {user_id}: {user_words[user_id]}")
-
-# Функция для отправки случайных сообщений
-async def send_random_messages(context: ContextTypes.DEFAULT_TYPE):
-    for user_id, words in user_words.items():
-        if words:
-            # Генерация случайной мемной фразы
-            selected_phrase = random.choice(meme_phrases)
-            selected_words = random.sample(words, min(2, len(words)))  # Берем случайные слова
-
-            # Подстановка слов в мемную фразу
-            message = selected_phrase.format(word1=selected_words[0], word2=selected_words[1] if len(selected_words) > 1 else selected_words[0])
-            await context.bot.send_message(chat_id=user_id, text=message)
-            print(f"Отправлено сообщение пользователю {user_id}: {message}")
-
-# Основная функция
 async def main():
-    app = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
+    """Запуск бота."""
+    application = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
 
-    app.add_handler(CommandHandler("start", lambda update, context: context.bot.send_message(chat_id=update.effective_chat.id, text="Я бот, запоминаю ваши слова!")))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # Обработчик текстовых сообщений
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    # Запускаем JobQueue для отправки случайных сообщений
-    job_queue = app.job_queue
-    job_queue.run_repeating(send_random_messages, interval=10, first=0)
+    # Планировщик для отправки остроумных сообщений
+    chat_id = None
+    # Получаем chat_id из первого сообщения
+    application.job_queue.run_repeating(send_funny_message, interval=300, first=0, context=chat_id)
 
-    print("Бот запущен и ждет сообщений...")
-    await app.initialize()  # Явно инициализируем приложение
-    await app.start()  # Запускаем приложение
-    await app.updater.start_polling()  # Запускаем polling
-    await app.idle()  # Ожидаем завершения работы приложения
+    # Запуск бота
+    await application.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Используем asyncio.run() для запуска основной функции
+    asyncio.run(main())
