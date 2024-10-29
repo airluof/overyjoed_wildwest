@@ -1,2 +1,3 @@
-python-telegram-bot[job-queue]
-schedule
+python-telegram-bot==20.3
+transformers==4.34.0
+torch==2.0.1
