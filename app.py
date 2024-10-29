@@ -22,6 +22,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Запоминаем слова пользователя
     words = text.split()
     user_words[user_id].extend(words)
+    print(f"Запомненные слова для пользователя {user_id}: {user_words[user_id]}")
 
 # Функция для отправки случайных сообщений
 async def send_random_messages(context: ContextTypes.DEFAULT_TYPE):
@@ -34,6 +35,7 @@ async def send_random_messages(context: ContextTypes.DEFAULT_TYPE):
             # Подстановка слов в мемную фразу
             message = selected_phrase.format(word1=selected_words[0], word2=selected_words[1] if len(selected_words) > 1 else selected_words[0])
             await context.bot.send_message(chat_id=user_id, text=message)
+            print(f"Отправлено сообщение пользователю {user_id}: {message}")
 
 # Основная функция
 async def main():
@@ -46,9 +48,9 @@ async def main():
     job_queue = app.job_queue
     job_queue.run_repeating(send_random_messages, interval=10, first=0)
 
+    print("Бот запущен и ждет сообщений...")
     await app.run_polling()
 
 if __name__ == "__main__":
-    # Создаем цикл событий
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    # Запускаем основную функцию без asyncio.run()
+    asyncio.run(main())
