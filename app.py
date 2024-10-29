@@ -2,63 +2,62 @@ import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# Получение токена из переменных окружения
+# Получаем токен из переменной окружения
 TOKEN = os.getenv("7647773708:AAHarSrLNkpcnGIAyr2GJykhd1rqNtiY5JU")
 
-# Приветственное сообщение
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    welcome_message = (
-        "🤠 Добро пожаловать в мир Дикого Запада!\n"
-        "Здесь вы можете:\n"
-        "- Начать приключения\n"
-        "- Покупать предметы\n"
-        "- Сражаться с другими игроками\n"
-        "- Участвовать в случайных событиях\n"
-        "Используйте команды, чтобы узнать больше!\n"
-        "Команды:\n"
-        "/start - Начать игру\n"
-        "/help - Получить помощь\n"
-        "/stats - Посмотреть свою статистику\n"
-        "/shop - Открыть магазин"
+# Проверяем, что токен установлен
+if not TOKEN:
+    raise ValueError("Токен бота не установлен. Пожалуйста, добавьте его в переменную окружения TELEGRAM_TOKEN.")
+
+# Начальная команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Добро пожаловать в мир Дикого Запада! 🌄\n"
+        "Вы – отважный странник, который только что приехал в город.\n\n"
+        "Используйте /profile, чтобы посмотреть свою статистику, и /buy, чтобы купить предметы."
     )
-    await update.message.reply_text(welcome_message)
 
-# Помощь
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    help_message = (
-        "Вот что вы можете сделать:\n"
-        "/start - Начать игру\n"
-        "/help - Получить помощь\n"
-        "/stats - Посмотреть свою статистику\n"
-        "/shop - Открыть магазин"
+# Команда для просмотра профиля игрока
+async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Заглушка профиля для примера
+    user_profile = {
+        "уровень": 1,
+        "золото": 100,
+        "опыт": 0
+    }
+    await update.message.reply_text(
+        f"📜 Ваш профиль:\n"
+        f"Уровень: {user_profile['уровень']}\n"
+        f"Золото: {user_profile['золото']} монет\n"
+        f"Опыт: {user_profile['опыт']} XP"
     )
-    await update.message.reply_text(help_message)
 
-# Статистика
-async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Здесь вы можете добавить логику для отображения статистики игрока
-    stats_message = "📊 Ваша статистика:\n- Уровень: 1\n- Валюта: 100\n- Здоровье: 100"
-    await update.message.reply_text(stats_message)
-
-# Магазин
-async def shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # Здесь вы можете добавить логику для отображения товаров в магазине
-    shop_message = (
-        "🏪 Добро пожаловать в магазин! Вы можете купить:\n"
-        "- Револьвер - 50 монет\n"
-        "- Лошадь - 100 монет"
+# Команда для покупки предметов
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Пример предметов, которые можно купить
+    items = {
+        "лошадь": 50,
+        "шляпа": 20,
+        "револьвер": 100
+    }
+    item_list = "\n".join([f"{item.capitalize()}: {price} золота" for item, price in items.items()])
+    await update.message.reply_text(
+        f"Вы можете купить:\n{item_list}\n\n"
+        "Используйте команду /buy <предмет> для покупки."
     )
-    await update.message.reply_text(shop_message)
 
-if __name__ == '__main__':
-    # Создание приложения бота
+# Настройка и запуск бота
+def main():
     app = ApplicationBuilder().token(TOKEN).build()
-    
-    # Регистрация команд
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("stats", stats))
-    app.add_handler(CommandHandler("shop", shop))
 
-    # Запуск бота
+    # Регистрируем обработчики команд
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("profile", profile))
+    app.add_handler(CommandHandler("buy", buy))
+
+    # Запускаем бота
+    print("Бот запущен...")
     app.run_polling()
+
+if __name__ == "__main__":
+    main()
