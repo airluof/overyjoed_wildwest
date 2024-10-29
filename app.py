@@ -21,7 +21,8 @@ async def send_random_message(context: ContextTypes.DEFAULT_TYPE) -> None:
     global user_messages
     if user_messages:
         message = random.choice(user_messages)  # Выбираем случайное сообщение
-        await context.bot.send_message(chat_id=context.job.chat_id, text=message)
+        chat_id = context.job.context  # Получаем chat_id из контекста задачи
+        await context.bot.send_message(chat_id=chat_id, text=message)
 
 async def main() -> None:
     application = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
@@ -35,7 +36,7 @@ async def main() -> None:
     # Запуск периодической задачи
     job_queue = application.job_queue
     chat_id = -4576812281  # Замените на ваш chat_id для группы
-    job_queue.run_repeating(send_random_message, interval=10, first=0, context=chat_id)
+    job_queue.run_repeating(send_random_message, interval=10, first=0, context=chat_id)  # Передаем chat_id в контексте задачи
 
     # Запуск бота
     await application.run_polling()
