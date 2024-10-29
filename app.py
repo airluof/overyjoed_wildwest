@@ -1,45 +1,67 @@
+import random
+import requests
+import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Updater, CommandHandler, CallbackContext
+from transformers import pipeline
+import time
 
-# Укажите токен напрямую
-TOKEN = "8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA"
+# Установите ваш токен Telegram-бота и Giphy API ключ
+TELEGRAM_TOKEN = '8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA'
+GIPHY_API_KEY = 'SXAPnfxLJz4dz5f2sy6h0ZpcBMjJjGef'
 
-# Команда /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Добро пожаловать в мир Дикого Запада! 🌄\n"
-        "Вы – отважный странник, который только что приехал в город.\n\n"
-        "Используйте /profile, чтобы посмотреть свою статистику, и /buy, чтобы купить предметы."
-    )
+# Инициализация модели
+generator = pipeline('text-generation', model='gpt2')
 
-# Команда для профиля
-async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_profile = {
-        "уровень": 1,
-        "золото": 100,
-        "опыт": 0
-    }
-    await update.message.reply_text(
-        f"📜 Ваш профиль:\n"
-        f"Уровень: {user_profile['уровень']}\n"
-        f"Золото: {user_profile['золото']} монет\n"
-        f"Опыт: {user_profile['опыт']} XP"
-    )
+# Список тем для сообщений
+TOPICS = ["анекдоты", "приговоры", "праздники", "животные", "природа"]
 
-# Команда для покупки предметов
-async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    items = {
-        "лошадь": 50,
-        "шляпа": 20,
-        "револьвер": 100
-    }
-    item_list = "\n".join([f"{item.capitalize()}: {price} золота" for item, price in items.items()])
-    await update.message.reply_text(f"Доступные предметы для покупки:\n{item_list}")
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Создание и запуск приложения
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("profile", profile))
-app.add_handler(CommandHandler("buy", buy))
+# Хранит информацию о чатах, куда будет отправляться сообщение
+chat_ids = set()
 
-app.run_polling()
+def send_random_message(context: CallbackContext) -> None:
+    if not chat_ids:
+        return  # Если нет чатов, выходим
+
+    chat_id = random.choice(list(chat_ids))  # Выбираем случайный чат
+    topic = random.choice(TOPICS)
+
+    # Генерация сообщения с помощью модели
+    message = generator(f"Напиши {topic}:", max_length=50, num_return_sequences=1)[0]['generated_text']
+
+    # Поиск GIF по теме
+    gif_url = get_random_gif(topic)
+
+    context.bot.send_message(chat_id=chat_id, text=message)
+    if gif_url:
+        context.bot.send_animation(chat_id=chat_id, animation=gif_url)
+
+def get_random_gif(topic):
+    url = f"https://api.giphy.com/v1/gifs/random?api_key={GIPHY_API_KEY}&tag={topic}&rating=g"
+    response = requests.get(url)
+    data = response.json()
+    
+    if data['data']:
+        return data['data']['images']['original']['url']
+    return None
+
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Привет! Я развлекательный бот. Теперь я буду отправлять сообщения в случайное время!")
+    chat_ids.add(update.message.chat_id)  # Добавляем чат в список
+    context.job_queue.run_repeating(send_random_message, interval=60, first=0)  # Отправка каждые 60 секунд
+
+def main() -> None:
+    updater = Updater(TELEGRAM_TOKEN)
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
