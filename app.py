@@ -10,8 +10,8 @@ user_words = defaultdict(list)
 # Список мемных фраз
 meme_phrases = [
     "Когда ты {word1}, а не {word2}",
-    "Ты такой {word} на самом деле!",
-    "Зачем ты {word}, если можно {word2}?",
+    "Ты такой {word1} на самом деле!",
+    "Зачем ты {word1}, если можно {word2}?",
 ]
 
 # Функция для обработки текстовых сообщений
@@ -37,11 +37,15 @@ async def send_random_messages(context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(chat_id=user_id, text=message)
             print(f"Отправлено сообщение пользователю {user_id}: {message}")
 
+# Функция для команды /start
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Я бот, запоминаю ваши слова!")
+
 # Основная функция
 async def main():
     app = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
 
-    app.add_handler(CommandHandler("start", lambda update, context: context.bot.send_message(chat_id=update.effective_chat.id, text="Я бот, запоминаю ваши слова!")))
+    app.add_handler(CommandHandler("start", start_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Запускаем JobQueue для отправки случайных сообщений
@@ -52,4 +56,12 @@ async def main():
     await app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Используйте asyncio.run() только здесь
+    try:
+        # Попытка получить существующий цикл событий
+        loop = asyncio.get_running_loop()
+    except RuntimeError:  
+        # Если цикла нет — запускаем asyncio.run()
+        asyncio.run(main())
+    else:
+        # Если цикл существует, запускаем main в нём
+        loop.create_task(main())
