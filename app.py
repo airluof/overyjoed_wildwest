@@ -33,14 +33,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Функция для периодической отправки случайных сообщений
 async def send_random_messages(context):
-    while True:
-        await asyncio.sleep(10)  # Задержка в 10 секунд между сообщениями
-        chat_id = context.job.context
-        if user_phrases:
-            user_id = random.choice(list(user_phrases.keys()))
-            meme = generate_meme(user_id)
-            if meme:
-                await context.bot.send_message(chat_id=chat_id, text=meme)
+    job_context = context.job.context
+    if user_phrases:
+        user_id = random.choice(list(user_phrases.keys()))
+        meme = generate_meme(user_id)
+        if meme:
+            await context.bot.send_message(chat_id=job_context, text=meme)
 
 # Команда для старта бота
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -48,7 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Основная функция
 async def main():
-    app = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
+    app = ApplicationBuilder().token("YOUR_TELEGRAM_BOT_TOKEN").build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
