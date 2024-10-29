@@ -1,43 +1,56 @@
+import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import random
 
-# Глобальная переменная для хранения сообщений
-user_messages = []
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
+logger = logging.getLogger(__name__)
+
+# Хранение данных о пользователях в группах
+group_data = {}
+
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Бот запущен!")
+    await update.message.reply_text('Привет! Я бот для развлечений. Пишите мне, и я вас позабавлю!')
 
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# Обработка текстовых сообщений
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = update.message.chat.id
+    user_id = update.message.from_user.id
+    user_name = update.message.from_user.first_name
+
+    # Инициализация данных для группы, если ещё не существует
+    if chat_id not in group_data:
+        group_data[chat_id] = {}
+
+    # Инициализация данных для пользователя в группе
+    if user_id not in group_data[chat_id]:
+        group_data[chat_id][user_id] = {'name': user_name, 'messages': []}
+
     # Сохраняем сообщение пользователя
-    user_messages.append(update.message.text)
+    group_data[chat_id][user_id]['messages'].append(update.message.text)
 
-async def send_random_message(context: ContextTypes.DEFAULT_TYPE) -> None:
-    chat_id = context.job.data['chat_id']  # Получаем chat_id из data
-    if user_messages:
-        random_message = random.choice(user_messages)
-        await context.bot.send_message(chat_id=chat_id, text=random_message)
+    # Если у пользователя уже есть сообщения, троллим его
+    if len(group_data[chat_id][user_id]['messages']) > 1:
+        # Получаем случайное сообщение для троллинга
+        troll_message = random.choice(group_data[chat_id][user_id]['messages'][:-1])
+        await update.message.reply_text(f"Эй, {user_name}, ты когда-то говорил: '{troll_message}'? 😂")
 
-async def main() -> None:
-    application = ApplicationBuilder().token('8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA').build()
+# Основная функция
+def main() -> None:
+    app = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
 
-    # Регистрируем обработчики
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    # Добавляем обработчики команд
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-    # Получаем JobQueue
-    job_queue = application.job_queue
+    # Запуск бота
+    app.run_polling()
 
-    # Добавляем задачу, чтобы бот отправлял сообщения через определенный интервал
-    chat_id = 'YOUR_GROUP_CHAT_ID'  # Укажите ID группы здесь
-    job_queue.run_repeating(send_random_message, interval=10, first=0, data={'chat_id': chat_id})
-
-    await application.run_polling()
-
-# Убираем asyncio.run и просто запускаем main()
 if __name__ == '__main__':
-    import asyncio
-
-    # Создаем основной асинхронный цикл
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    main()
