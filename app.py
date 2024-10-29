@@ -16,8 +16,7 @@ user_phrases = defaultdict(list)
 def generate_meme(user_id):
     if user_phrases[user_id]:
         return random.choice(user_phrases[user_id])
-    else:
-        return None
+    return None
 
 # Обработчик сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -61,5 +60,6 @@ async def main():
     await app.run_polling()
 
 if __name__ == '__main__':
+    # Получаем текущий цикл событий и запускаем основную функцию
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
