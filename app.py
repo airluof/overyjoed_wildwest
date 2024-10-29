@@ -1,44 +1,37 @@
-import logging
-import random
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes, JobQueue
+import random
 
-# Включите логирование
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-# Храните сообщения пользователей
+# Глобальная переменная для хранения сообщений
 user_messages = []
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Бот готов к работе!")
+    await update.message.reply_text("Бот запущен!")
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    global user_messages
-    user_messages.append(update.message.text)  # Сохраняем сообщение пользователя
-    await update.message.reply_text("Сообщение сохранено!")
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Сохраняем сообщение пользователя
+    user_messages.append(update.message.text)
 
 async def send_random_message(context: ContextTypes.DEFAULT_TYPE) -> None:
-    global user_messages
     if user_messages:
-        message = random.choice(user_messages)  # Выбираем случайное сообщение
-        chat_id = context.job.context  # Получаем chat_id из контекста задачи
-        await context.bot.send_message(chat_id=chat_id, text=message)
+        chat_id = context.job.chat_id
+        random_message = random.choice(user_messages)
+        await context.bot.send_message(chat_id=chat_id, text=random_message)
 
 async def main() -> None:
-    application = ApplicationBuilder().token("8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA").build()
+    application = ApplicationBuilder().token('8151195711:AAHusRUvtSM6CkyKtYRuFfD9Hyh_gCeZDVA').build()
 
-    # Команды
+    # Регистрируем обработчики
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    # Обработка сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    # Запуск периодической задачи
+    # Получаем JobQueue
     job_queue = application.job_queue
-    chat_id = -4576812281  # Замените на ваш chat_id для группы
-    job_queue.run_repeating(send_random_message, interval=10, first=0, context=chat_id)  # Передаем chat_id в контексте задачи
 
-    # Запуск бота
+    # Добавляем задачу, чтобы бот отправлял сообщения через определенный интервал
+    chat_id = 'YOUR_GROUP_CHAT_ID'  # Укажите ID группы здесь
+    job_queue.run_repeating(send_random_message, interval=10, first=0, context={'chat_id': chat_id})
+
     await application.run_polling()
 
 if __name__ == '__main__':
