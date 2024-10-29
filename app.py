@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 # Получаем токен из переменной окружения
-TOKEN = os.getenv("7647773708:AAHarSrLNkpcnGIAyr2GJykhd1rqNtiY5JU")
+TOKEN = os.getenv("7647773708:AAE33MAv7RTc8vpcwmVUnu1j2PYxaG1-l8U")
 
 # Проверяем, что токен установлен
 if not TOKEN:
