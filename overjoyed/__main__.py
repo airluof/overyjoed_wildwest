@@ -3,7 +3,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder
-from troll_bot.handlers import get_update_handler, get_forward_handler, get_help_handler
+from overjoyed.handlers import get_update_handler, get_forward_handler, get_help_handler
 
 # Загружаем переменные окружения из .env файла
 load_dotenv()
