@@ -1,33 +1,29 @@
-import logging
-import asyncio
 import os
-from dotenv import load_dotenv
-from telegram.ext import ApplicationBuilder
-from overjoyed.handlers import get_update_handler, get_forward_handler, get_help_handler
+import asyncio
+import logging
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
-# Загружаем переменные окружения из .env файла
-load_dotenv()
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger(__name__)
+# Установка уровня логирования
+logging.basicConfig(level=logging.DEBUG)
 
 async def main():
-    """Основная функция для запуска бота."""
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
-        log.error("Токен бота не найден в переменных окружения.")
-        return
+    # Создание приложения Telegram
+    app = ApplicationBuilder().token(os.getenv('TELEGRAM_BOT_TOKEN')).build()
 
-    app = ApplicationBuilder().token(token).build()
+    # Регистрация обработчиков
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Добавление обработчиков
-    app.add_handler(get_update_handler())
-    app.add_handler(get_forward_handler())
-    app.add_handler(get_help_handler())
-
-    # Запуск бота
+    # Запуск приложения
     await app.run_polling()
 
+async def start(update, context):
+    await update.message.reply_text('Привет! Я бот.')
+
+async def handle_message(update, context):
+    await update.message.reply_text('Вы написали: ' + update.message.text)
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Получение текущего цикла событий
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
