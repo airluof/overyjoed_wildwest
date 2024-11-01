@@ -1,2 +1,2 @@
 python-telegram-bot==20.3
-huggingface_hub==0.17.2
+pymongo
