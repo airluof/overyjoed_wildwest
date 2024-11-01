@@ -1,7 +1,7 @@
 import os
 import subprocess
-from troll_bot.espeak import ESpeak
-from troll_bot.utils import generate_random_string
+from overjoyed.espeak import ESpeak
+from overjoyed.utils import generate_random_string
 
 def send_audio(bot, chat_id, text):
     audio_file_path = get_text_to_speech_file(text)
