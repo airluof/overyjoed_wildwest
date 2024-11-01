@@ -4,7 +4,7 @@ import datetime
 
 from overjoyed.audio import send_audio
 from overjoyed.gif import send_gif
-from overyjoed.database import search_messages
+from overyjoyed.database import search_messages
 from overjoyed.utils import return_true_by_percentage, random_item
 
 log = logging.getLogger(__name__)
