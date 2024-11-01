@@ -16,7 +16,7 @@ else:
 def create_connection():
     try:
         client = MongoClient(MONGODB_URI)
-        db = client['troll_bot_db']  # Замените на имя вашей базы данных
+        db = client['test']  # Замените на имя вашей базы данных
         logging.info("Successfully connected to MongoDB.")
         return db
     except Exception as e:
