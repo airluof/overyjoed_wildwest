@@ -1,7 +1,7 @@
 import os
 import logging
 from telegram.ext import ApplicationBuilder
-from troll_bot.handlers import get_update_handler, get_forward_handler, get_help_handler
+from overjoyed.handlers import get_update_handler, get_forward_handler, get_help_handler
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
