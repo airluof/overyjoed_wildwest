@@ -1,3 +1,6 @@
-python-telegram-bot==20.3
-pymongo
+python-telegram-bot==20.0  # Укажите нужную версию
+pymongo==4.0                # Укажите нужную версию
+giphypop==2.0                # Укажите нужную версиюв
+python-dotenv==0.19.0       # Укажите нужную версию
+requests==2.25.1            # Укажите нужную версию (если нужно)
 python-dotenv
