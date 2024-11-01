@@ -1,7 +1,7 @@
 import urllib
 import os
 import giphypop
-from troll_bot.utils import generate_random_string
+from overjoyed.utils import generate_random_string
 
 def send_gif(bot, chat_id, text):
     gif_path = get_gif_file_path(text)
