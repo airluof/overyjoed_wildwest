@@ -59,7 +59,7 @@ async def print_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ''')
 
 def get_update_handler():
-    return MessageHandler(filters.text & ~filters.command, reply_text)
+    return MessageHandler(filters.TEXT & ~filters.COMMAND, reply_text)
 
 def get_forward_handler():
     return CommandHandler("fwd", forward_message)
