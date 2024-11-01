@@ -1,8 +1,8 @@
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
-from troll_bot.database import save_message
-from troll_bot.reply import (get_random_message_word, get_reply_message, 
+from overjoyed.database import save_message
+from overjoyed.reply import (get_random_message_word, get_reply_message, 
                              should_reply, get_reply_type, 
                              reply_text_message, reply_audio_message, 
                              reply_gif_message)
