@@ -2,10 +2,10 @@ import logging
 import random
 import datetime
 
-from troll_bot.audio import send_audio
-from troll_bot.gif import send_gif
-from troll_bot.database import search_messages
-from troll_bot.utils import return_true_by_percentage, random_item
+from overjoyed.audio import send_audio
+from overjoyed.gif import send_gif
+from overyjoed.database import search_messages
+from overjoyed.utils import return_true_by_percentage, random_item
 
 log = logging.getLogger(__name__)
 
